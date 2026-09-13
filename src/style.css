@@ -24,10 +24,11 @@ html, body {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: #5c94fc;
-  width: min(100vw, 178.6vh);
-  height: min(56vw, 100vh);
-  max-width: 1280px;
-  max-height: 1120px;
+  aspect-ratio: 800 / 448;
+  width: auto;
+  height: auto;
+  max-width: min(100vw, 1600px);
+  max-height: min(100vh, 896px);
   border: 2px solid #000;
   display: block;
 }

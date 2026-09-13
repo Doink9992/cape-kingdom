@@ -1,5 +1,5 @@
 export const TILE = 32;
-export const VIEW_W = 512;
+export const VIEW_W = 800;
 export const VIEW_H = 448;
 export const VIEW_TILES_W = VIEW_W / TILE;
 export const VIEW_TILES_H = VIEW_H / TILE;
