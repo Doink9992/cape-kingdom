@@ -1,0 +1,79 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a14;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  touch-action: none;
+}
+
+#game-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#game {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #5c94fc;
+  width: min(100vw, 178.6vh);
+  height: min(56vw, 100vh);
+  max-width: 1280px;
+  max-height: 1120px;
+  border: 2px solid #000;
+  display: block;
+}
+
+#touch-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  justify-content: space-between;
+  padding: 16px;
+  pointer-events: none;
+  user-select: none;
+}
+
+body.touch #touch-controls {
+  display: flex;
+}
+
+.tc-left, .tc-right {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.tc-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.6);
+  background: rgba(20,20,30,0.45);
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  touch-action: none;
+}
+
+.tc-btn.tc-round {
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  background: rgba(200,40,40,0.55);
+}
+
+.tc-btn:active {
+  background: rgba(255,255,255,0.35);
+}

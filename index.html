@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cape Kingdom</title>
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game" width="512" height="448"></canvas>
+    <div id="touch-controls">
+      <div class="tc-left">
+        <button id="tc-left" class="tc-btn">◀</button>
+        <button id="tc-right" class="tc-btn">▶</button>
+        <button id="tc-down" class="tc-btn">▼</button>
+      </div>
+      <div class="tc-right">
+        <button id="tc-run" class="tc-btn tc-round">Y</button>
+        <button id="tc-jump" class="tc-btn tc-round">B</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
