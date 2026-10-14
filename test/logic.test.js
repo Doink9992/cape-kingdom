@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const Voice = require('../js/speech.js');
 const AI = require('../js/ai.js');
 const { LANGS, LESSONS } = require('../js/data.js');
+require('../js/data.freq.js'); // ergänzt LESSONS.ja um die Häufigkeits-Wortliste
 
 test('Daten: jede Sprache hat Lektionen, eindeutige IDs und gültige Einträge', () => {
   for (const lang of Object.keys(LANGS)) {
@@ -65,4 +66,23 @@ test('Japanisch: Anime-Lektionen vorhanden und Einträge eindeutig', () => {
   const ids = LESSONS.ja.map((l) => l.id);
   assert.ok(ids.includes('anime1') && ids.includes('anime2'));
   assert.strictEqual(LESSONS.ja.find((l) => l.id === 'anime1').items.length, 10);
+});
+
+test('Wortliste (data.freq.js): Struktur, Beispielsätze, Lesungen', () => {
+  const freq = LESSONS.ja.filter((l) => l.id.startsWith('freq-'));
+  assert.ok(freq.length >= 40, 'zu wenige Lektionen');
+  const kanaOnly = /^[\u3040-\u30ff]+$/;
+  let words = 0;
+  for (const l of freq) {
+    assert.ok(l.group.startsWith('Häufige Wörter'), l.id);
+    assert.ok(l.items.length >= 5 && l.items.length <= 14, `${l.id}: ${l.items.length} Einträge`);
+    for (const it of l.items) {
+      words++;
+      assert.ok(Array.isArray(it.ex) && it.ex.length === 3 && it.ex.every((x) => x && typeof x === 'string'), `${it.t}: Beispielsatz`);
+      assert.ok(kanaOnly.test(it.t) || (it.alt && it.alt.every((a) => kanaOnly.test(a)) && it.alt.length), `${it.t}: Lesung fehlt`);
+    }
+  }
+  assert.ok(words >= 400, `nur ${words} Wörter`);
+  // keine Einzel-Kana-Partikel (Stimme liest sie nicht sinnvoll vor)
+  assert.ok(!LESSONS.ja.flatMap((l) => l.items).some((i) => Array.from(i.t).length === 1 && kanaOnly.test(i.t)));
 });
