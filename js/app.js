@@ -72,7 +72,8 @@
     view.replaceChildren(...nodes.flat().filter(Boolean));
   };
   // Fürs Vorlesen bevorzugt die reine Kana-Schreibweise: Kanji-Lesungen (四 = yon/shi?) sind für die Stimme mehrdeutig.
-  const spoken = (it) => it.alt?.find((a) => /^[\u3040-\u30ff]+$/.test(a)) || it.t;
+  const KANA_ONLY = /^[\u3040-\u30ff]+$/;
+  const spoken = (it) => (KANA_ONLY.test(it.t) ? it.t : it.alt?.find((a) => KANA_ONLY.test(a)) || it.t);
   const audioBtn = (x) => h('button', { class: 'icon', title: 'Anhören', onclick: () => Voice.speak(typeof x === 'string' ? x : spoken(x), code()) }, '🔊');
   const today = () => new Date().toISOString().slice(0, 10);
   const markDaily = (task) => {

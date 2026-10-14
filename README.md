@@ -8,7 +8,7 @@ Reines HTML/CSS/JS, kein Build, kein Server-Backend. Japanisch ist der Schwerpun
 - **Heute** (nur Japanisch): Tagesplan für ca. 20 Minuten: Kana, Vokabeln wiederholen, Hörtraining.
 - **Kana-Trainer** (nur Japanisch): Hiragana und Katakana in 15 Gruppen je Schrift (inkl. ゛/゜ und Kombinationen wie きゃ). Zeichen ansehen und anhören, Quiz in zwei Richtungen (Zeichen → Umschrift, Hören → Zeichen). Gruppe gilt ab 80 % als gelernt. Falsche Zeichen kommen früher zur Wiederholung.
 - **Hörtraining**: Wort/Satz nur anhören (auch langsam), Bedeutung wählen, Text erst danach sichtbar. Braucht keine Kana-Kenntnisse.
-- **Lektionen**: je 5 (Englisch, Italienisch) bzw. 9 (Japanisch) Lektionen mit Quiz. Japanisch mit Umschrift.
+- **Lektionen**: je 5 (Englisch, Italienisch) bzw. 11 (Japanisch) Lektionen mit Quiz. Japanisch mit Umschrift, darunter 2 „Anime“-Lektionen (häufige Ausrufe und Alltagsrituale in lockerer Sprache).
 - **Vokabeltrainer**: Karteikarten mit Wiederholungsplan (Leitner-Boxen: 1, 2, 4, 8, 16, 32 Tage). Karten kommen aus den Lektionen, die du geöffnet hast.
 - **Sprechen üben**: Satz anhören, nachsprechen, die Spracherkennung des Browsers vergleicht (Treffer ab 75 %).
 - **KI-Gespräch**: Konversation mit Claude auf Anfängerniveau, mit Korrekturen auf Deutsch. Braucht einen eigenen Anthropic-API-Key (Nutzung kostet nach Verbrauch).
@@ -25,7 +25,7 @@ Spracherkennung funktioniert nur über `https://` oder `localhost` und nur in **
 ## Grenzen
 
 - **Die App allein führt nicht zu flüssigem Hörverstehen.** Die Stimme ist synthetisch und spricht langsam und deutlich. Dazu braucht es täglich echtes Japanisch von Muttersprachlern (z. B. NHK Easy News, Videos für Lernende, Anime mit japanischen Untertiteln). Realistisch dauert das Jahre, nicht Wochen.
-- Kanji, Grammatik-Erklärungen und eine große Wortschatzliste nach Häufigkeit fehlen noch. Der Wortschatz umfasst bisher nur rund 80 Einträge.
+- Kanji, Grammatik-Erklärungen und eine große Wortschatzliste nach Häufigkeit fehlen noch. Der Wortschatz umfasst bisher nur rund 100 Einträge.
 - Einzelne Kana und Kanji werden von der Browser-Stimme nicht immer perfekt gelesen. Fürs Vorlesen wird deshalb wo möglich die Kana-Schreibweise genutzt.
 - Die Aussprachebewertung ist nur der Textvergleich dessen, was die Spracherkennung verstanden hat. Sie sagt nicht, *wie* gut du klingst. Bei Japanisch kann die Erkennung Kanji statt Kana liefern; dafür gibt es Alternativschreibweisen in `js/data.js`.
 - Die Qualität der Stimmen hängt vom Gerät ab. Fehlt eine Japanisch- oder Italienisch-Stimme, bleibt die Vorlesefunktion stumm.

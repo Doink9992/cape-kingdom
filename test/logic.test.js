@@ -60,3 +60,9 @@ test('Japanisch: Lesungen zum Vorlesen sind echte Kana-Alternativen', () => {
   const sevens = LESSONS.ja.flatMap((l) => l.items).find((i) => i.t === '七');
   assert.strictEqual(sevens.alt.find((a) => kanaOnly.test(a)), 'なな');
 });
+
+test('Japanisch: Anime-Lektionen vorhanden und Einträge eindeutig', () => {
+  const ids = LESSONS.ja.map((l) => l.id);
+  assert.ok(ids.includes('anime1') && ids.includes('anime2'));
+  assert.strictEqual(LESSONS.ja.find((l) => l.id === 'anime1').items.length, 10);
+});
