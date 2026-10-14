@@ -6,11 +6,12 @@ const LANGS = {
   it: { name: 'Italienisch', code: 'it-IT', flag: '🇮🇹' },
 };
 
-// Optionales 5. Feld: Beispielsatz [Satz, Umschrift, Deutsch]
-const L = (id, title, rows, group) => ({
+// Optionales 5. Feld: Beispielsatz [Satz, Umschrift, Deutsch]. Optional je Lektion: group (Gruppe in der Liste), note (Erklärtext).
+const L = (id, title, rows, group, note) => ({
   id,
   title,
   group,
+  note,
   items: rows.map(([t, de, r, alt, ex]) => ({ t, de, r, alt, ex })),
 });
 
@@ -196,6 +197,102 @@ const LESSONS = {
       ['お疲れ様', 'Gute Arbeit / Danke für deine Mühe', 'otsukaresama', ['おつかれさま', 'お疲れ様です', 'おつかれさまです']],
       ['一緒に行こう', 'Lass uns zusammen gehen', 'issho ni ikō', ['いっしょにいこう']],
     ]),
+    L('gram-wa', 'Grammatik 1: は – das Thema', [
+      ['私は学生です。', 'Ich bin Student/Studentin.', 'watashi wa gakusei desu.'],
+      ['これは本です。', 'Das ist ein Buch.', 'kore wa hon desu.'],
+      ['田中さんは先生です。', 'Herr Tanaka ist Lehrer.', 'Tanaka-san wa sensei desu.'],
+      ['今日は暑いです。', 'Heute ist es heiß.', 'kyō wa atsui desu.'],
+      ['日本語は難しいです。', 'Japanisch ist schwer.', 'nihongo wa muzukashii desu.'],
+      ['猫は好きですか。', 'Magst du Katzen?', 'neko wa suki desu ka.'],
+      ['あの人は誰ですか。', 'Wer ist diese Person dort?', 'ano hito wa dare desu ka.'],
+    ], 'Grammatik', 'は nennt das Thema des Satzes („was … angeht“) und wird als „wa“ gesprochen, nicht „ha“. です am Ende ist die höfliche Form von „sein“. Aufbau: Thema は Aussage です. Ins Deutsche übersetzt man meist mit „ist/sind“.'),
+    L('gram-ga', 'Grammatik 2: が – Subjekt, Mögen, Vorhandensein', [
+      ['雨が降っています。', 'Es regnet (gerade).', 'ame ga futte imasu.'],
+      ['誰が来ましたか。', 'Wer ist gekommen?', 'dare ga kimashita ka.'],
+      ['私は猫が好きです。', 'Ich mag Katzen.', 'watashi wa neko ga suki desu.'],
+      ['日本語が分かります。', 'Ich verstehe Japanisch.', 'nihongo ga wakarimasu.'],
+      ['部屋に机があります。', 'Im Zimmer steht ein Tisch.', 'heya ni tsukue ga arimasu.'],
+      ['公園に子供がいます。', 'Im Park sind Kinder.', 'kōen ni kodomo ga imasu.'],
+      ['水が飲みたいです。', 'Ich möchte Wasser trinken.', 'mizu ga nomitai desu.'],
+    ], 'Grammatik', 'が markiert das Subjekt, besonders bei neuer Information und bei Fragewörtern (誰が = wer). Mit 好き (mögen), 分かる (verstehen), ある/いる (es gibt) und 〜たい (möchten) steht auch das, was man mag oder versteht, mit が: 猫が好き = „Katzen mag ich“. ある gilt für Dinge, いる für Lebewesen.'),
+    L('gram-o', 'Grammatik 3: を – das Objekt', [
+      ['水を飲みます。', 'Ich trinke Wasser.', 'mizu o nomimasu.'],
+      ['本を読みます。', 'Ich lese ein Buch.', 'hon o yomimasu.'],
+      ['ご飯を食べます。', 'Ich esse (eine Mahlzeit).', 'gohan o tabemasu.'],
+      ['音楽を聞きます。', 'Ich höre Musik.', 'ongaku o kikimasu.'],
+      ['テレビを見ます。', 'Ich sehe fern.', 'terebi o mimasu.'],
+      ['アニメを見ます。', 'Ich schaue Anime.', 'anime o mimasu.'],
+      ['手紙を書きます。', 'Ich schreibe einen Brief.', 'tegami o kakimasu.'],
+      ['写真を撮ります。', 'Ich mache ein Foto.', 'shashin o torimasu.'],
+    ], 'Grammatik', 'を markiert das direkte Objekt (das, was man isst, liest, sieht …) und wird „o“ gesprochen. Aufbau: Objekt を Verb. Das Verb steht immer am Satzende.'),
+    L('gram-ni-de', 'Grammatik 4: に und で', [
+      ['学校に行きます。', 'Ich gehe zur Schule.', 'gakkō ni ikimasu.'],
+      ['七時に起きます。', 'Ich stehe um sieben Uhr auf.', 'shichiji ni okimasu.'],
+      ['家にいます。', 'Ich bin zu Hause.', 'ie ni imasu.'],
+      ['友達に会います。', 'Ich treffe einen Freund.', 'tomodachi ni aimasu.'],
+      ['図書館で勉強します。', 'Ich lerne in der Bibliothek.', 'toshokan de benkyō shimasu.'],
+      ['レストランで食べます。', 'Ich esse im Restaurant.', 'resutoran de tabemasu.'],
+      ['バスで行きます。', 'Ich fahre mit dem Bus.', 'basu de ikimasu.'],
+      ['日本語で話します。', 'Ich spreche auf Japanisch.', 'nihongo de hanashimasu.'],
+    ], 'Grammatik', 'に: Ziel einer Bewegung, Zeitpunkt, Ort des Vorhandenseins (ある/いる) und die Person, die man trifft. で: Ort, an dem eine Handlung stattfindet, sowie Mittel und Werkzeug. 学校に行く = zur Schule gehen, 学校で勉強する = in der Schule lernen.'),
+    L('gram-no-mo-to', 'Grammatik 5: の, も, と', [
+      ['これは私の本です。', 'Das ist mein Buch.', 'kore wa watashi no hon desu.'],
+      ['日本の車です。', 'Das ist ein japanisches Auto.', 'Nihon no kuruma desu.'],
+      ['先生の名前は田中です。', 'Der Name des Lehrers ist Tanaka.', 'sensei no namae wa Tanaka desu.'],
+      ['私も学生です。', 'Ich bin auch Student/Studentin.', 'watashi mo gakusei desu.'],
+      ['水もください。', 'Wasser bitte auch.', 'mizu mo kudasai.'],
+      ['パンと牛乳をください。', 'Brot und Milch, bitte.', 'pan to gyūnyū o kudasai.'],
+      ['友達と映画を見ます。', 'Ich sehe mit einem Freund einen Film.', 'tomodachi to eiga o mimasu.'],
+    ], 'Grammatik', 'の verbindet Nomen (Besitz, Zugehörigkeit): 私の本 = mein Buch, wörtlich „Buch von mir“. も = auch (ersetzt は, が oder を). と = „und“ zwischen Nomen oder „mit“ jemandem.'),
+    L('gram-kara-ne-yo', 'Grammatik 6: から, まで, か, ね, よ', [
+      ['九時から五時までです。', 'Es ist von neun bis fünf Uhr.', 'kuji kara goji made desu.'],
+      ['明日まで待ちます。', 'Ich warte bis morgen.', 'ashita made machimasu.'],
+      ['日本から来ました。', 'Ich komme aus Japan.', 'Nihon kara kimashita.'],
+      ['疲れたから、もう帰るね。', 'Ich bin müde, deshalb gehe ich jetzt nach Hause, okay?', 'tsukareta kara, mō kaeru ne.'],
+      ['行きますか。', 'Gehst du hin?', 'ikimasu ka.'],
+      ['いい天気ですね。', 'Schönes Wetter, nicht wahr?', 'ii tenki desu ne.'],
+      ['これは私のですよ。', 'Das gehört mir, das sag ich dir.', 'kore wa watashi no desu yo.'],
+    ], 'Grammatik', 'から = von/ab, oder „weil“ nach einem Satz. まで = bis. か am Satzende macht eine Frage. ね holt Zustimmung ein („nicht wahr?“, „okay?“). よ betont eine Information („das sag ich dir“). ね und よ hörst du im Anime ständig am Satzende.'),
+    L('gram-masu-plain', 'Grammatik 7: höflich und Kurzform', [
+      ['食べます。', 'Ich esse. (höflich)', 'tabemasu.'],
+      ['食べる。', 'Ich esse. (Kurzform)', 'taberu.'],
+      ['行きます。', 'Ich gehe. (höflich)', 'ikimasu.'],
+      ['行く。', 'Ich gehe. (Kurzform)', 'iku.'],
+      ['これはペンです。', 'Das ist ein Stift. (höflich)', 'kore wa pen desu.'],
+      ['これはペンだ。', 'Das ist ein Stift. (Kurzform)', 'kore wa pen da.'],
+      ['何を食べますか。', 'Was isst du? (höflich)', 'nani o tabemasu ka.'],
+      ['何を食べる？', 'Was isst du? (locker)', 'nani o taberu?'],
+    ], 'Grammatik', 'Die ます-Form ist höflich (Fremde, Arbeit, Unterricht). Unter Freunden und im Anime hört man meist die Kurzform, die Wörterbuchform: 食べます = 食べる, 行きます = 行く. です wird in der Kurzform zu だ. In der Kurzform genügt für Fragen die steigende Stimme, か fällt weg. Du musst beide Formen erkennen, in der Wortliste stehen die Verben in Kurzform.'),
+    L('gram-past-neg', 'Grammatik 8: Verneinung und Vergangenheit', [
+      ['食べません。', 'Ich esse nicht.', 'tabemasen.'],
+      ['食べました。', 'Ich habe gegessen.', 'tabemashita.'],
+      ['食べませんでした。', 'Ich habe nicht gegessen.', 'tabemasen deshita.'],
+      ['食べない。', 'Ich esse nicht. (Kurzform)', 'tabenai.'],
+      ['食べた。', 'Ich habe gegessen. (Kurzform)', 'tabeta.'],
+      ['食べなかった。', 'Ich habe nicht gegessen. (Kurzform)', 'tabenakatta.'],
+      ['高くない。', 'Es ist nicht teuer.', 'takakunai.'],
+      ['昨日は忙しかった。', 'Gestern war ich beschäftigt.', 'kinō wa isogashikatta.'],
+    ], 'Grammatik', 'Höflich: 食べます (esse), 食べません (esse nicht), 食べました (aß), 食べませんでした (aß nicht). Kurzform: 食べる / 食べない / 食べた / 食べなかった. い-Adjektive ändern die Endung: 高い (teuer) → 高くない (nicht teuer), 高かった (war teuer).'),
+    L('gram-te', 'Grammatik 9: die て-Form', [
+      ['見てください。', 'Bitte schau (dir das an).', 'mite kudasai.'],
+      ['待ってください。', 'Bitte warten Sie.', 'matte kudasai.'],
+      ['ここに座ってください。', 'Bitte setzen Sie sich hierher.', 'koko ni suwatte kudasai.'],
+      ['聞いて！', 'Hör zu!', 'kiite!'],
+      ['手伝って！', 'Hilf mir!', 'tetsudatte!'],
+      ['急いで！', 'Beeil dich!', 'isoide!'],
+      ['今、ご飯を食べています。', 'Ich esse gerade.', 'ima, gohan o tabete imasu.'],
+      ['妹は寝ています。', 'Meine kleine Schwester schläft.', 'imōto wa nete imasu.'],
+    ], 'Grammatik', 'Die て-Form (食べて, 見て, 待って) braucht man ständig. 〜てください = bitte tu …; nur 〜て (locker) = tu …! (Bitte oder Befehl, im Anime sehr häufig: 待って！ = Warte!). 〜ている = gerade dabei oder Zustand. Die Bildung hängt von der Verbgruppe ab, du erkennst sie zunächst am Klang.'),
+    L('gram-tai-ou', 'Grammatik 10: Wünsche und Aufforderungen', [
+      ['日本に行きたいです。', 'Ich möchte nach Japan reisen.', 'Nihon ni ikitai desu.'],
+      ['寿司が食べたい。', 'Ich will Sushi essen.', 'sushi ga tabetai.'],
+      ['もう帰ろう。', 'Lass uns jetzt nach Hause gehen.', 'mō kaerō.'],
+      ['みんなで食べましょう。', 'Lasst uns alle zusammen essen.', 'minna de tabemashō.'],
+      ['泣かないで。', 'Wein nicht.', 'nakanaide.'],
+      ['行かないで！', 'Geh nicht!', 'ikanaide!'],
+      ['逃げるな！', 'Lauf nicht weg!', 'nigeru na!'],
+      ['触るな！', 'Nicht anfassen!', 'sawaru na!'],
+    ], 'Grammatik', '〜たい = ich möchte …. 〜よう / 〜ましょう = lass uns …. 〜ないで = tu … nicht (Bitte). 〜な nach der Kurzform = Verbot, grob und im Anime häufig: 逃げるな！ = Lauf nicht weg! Nur unter Vertrauten oder in Kampfszenen gebräuchlich.'),
   ],
 
   it: [
@@ -258,6 +355,6 @@ const LESSONS = {
 };
 
 // Gruppen für die Japanisch-Lektionen (weitere kommen aus data.freq.js)
-for (const l of LESSONS.ja) l.group = ['anime1', 'anime2'].includes(l.id) ? 'Anime' : 'Grundlagen';
+for (const l of LESSONS.ja) l.group ??= ['anime1', 'anime2'].includes(l.id) ? 'Anime' : 'Grundlagen';
 
 if (typeof module !== 'undefined') module.exports = { LANGS, LESSONS };

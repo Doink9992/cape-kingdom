@@ -86,6 +86,11 @@
     const box = ok ? Math.min((state.srs[key]?.box ?? 0) + 1, INTERVALS.length - 1) : 0;
     state.srs[key] = { box, due: ok ? Date.now() + INTERVALS[box] * DAY : Date.now() };
   };
+  // Antwortoptionen aus der Gruppe der Lektion (Sätze bei Sätzen, Wörter bei Wörtern), sonst aus allen
+  const poolFor = (l) => {
+    const same = lessons().filter((x) => x.group === l.group).flatMap((x) => x.items);
+    return same.length >= 12 ? same : lessons().flatMap((x) => x.items);
+  };
   const startedItems = () => lessons().filter((l) => prog(l.id).started).flatMap((l) => l.items);
   const backBtn = (fn, text = '← Zurück') => h('button', { class: 'link', onclick: fn }, text);
 
@@ -172,10 +177,12 @@
 
   function openLesson(l) {
     prog(l.id).started = true;
+    if (l.group === 'Grammatik') markDaily('grammar');
     persist();
     show(
       backBtn(() => go('lessons')),
       h('h2', {}, l.title),
+      l.note && h('p', { class: 'note' }, l.note),
       h(
         'ul',
         { class: 'items' },
@@ -199,7 +206,7 @@
         'div',
         { class: 'row' },
         h('button', { class: 'primary', onclick: () => runQuiz(l) }, '📝 Quiz'),
-        h('button', { class: 'primary', onclick: () => listenLesson(l) }, '👂 Wörter hören'),
+        h('button', { class: 'primary', onclick: () => listenLesson(l) }, l.group === 'Grammatik' ? '👂 Sätze hören' : '👂 Wörter hören'),
         l.items.some((it) => it.ex) && h('button', { class: 'primary', onclick: () => listenSentences(l) }, '👂 Sätze hören'),
         h('button', { class: 'primary', onclick: () => speakLesson(l) }, '🎤 Sprechen üben'),
       ),
@@ -208,7 +215,7 @@
 
   // ---------- Quiz ----------
   function runQuiz(l) {
-    const pool = lessons().flatMap((x) => x.items);
+    const pool = poolFor(l);
     const items = shuffle(l.items);
     let i = 0;
     let ok = 0;
@@ -583,7 +590,7 @@
       p.listen = Math.max(p.listen || 0, ok / n);
       markDaily('listen');
       listenResult(ok, n, () => listenLesson(l));
-    }, viewListen);
+    }, viewListen, poolFor(l));
   }
 
   function listenResult(ok, n, again) {
@@ -790,12 +797,22 @@
     const now = Date.now();
     const due = all.filter((it) => state.srs[srsKey(it)]?.due <= now).length;
     const fresh = all.filter((it) => !state.srs[srsKey(it)]).length;
+    const shortGrammar = (l) => l.title.replace(/^Grammatik \d+: /, '');
+    const nextGrammar = lessons().find((l) => l.group === 'Grammatik' && !prog(l.id).started);
     const tasks = [
       {
         key: 'kana',
         title: nextGroup ? `Kana: ${KANA.names[nextGroup.script]} – ${nextGroup.label}` : 'Kana wiederholen',
         detail: nextGroup ? 'Neue Gruppe ansehen und üben, ca. 8 Min.' : 'Alle Gruppen geschafft. Kurze Wiederholung, ca. 3 Min.',
         run: () => (nextGroup ? studyGroup(nextGroup) : kanaReview()),
+      },
+      (nextGrammar || doneToday('grammar')) && {
+        key: 'grammar',
+        title: doneToday('grammar') || !nextGrammar ? 'Grammatik' : `Grammatik: ${shortGrammar(nextGrammar)}`,
+        detail: doneToday('grammar')
+          ? `Heute erledigt.${nextGrammar ? ` Nächste Lektion: ${shortGrammar(nextGrammar)}` : ''}`
+          : 'Kurze Erklärung mit Beispielsätzen zum Anhören, ca. 5 Min.',
+        run: () => (nextGrammar ? openLesson(nextGrammar) : go('lessons')),
       },
       {
         key: 'srs',
@@ -812,11 +829,11 @@
     ];
     show(
       h('h2', {}, `📅 Heute – ${new Date().toLocaleDateString('de-DE')}`),
-      h('p', { class: 'muted' }, 'Rund 20 Minuten. Lieber jeden Tag ein bisschen als einmal pro Woche viel.'),
+      h('p', { class: 'muted' }, 'Rund 20–25 Minuten. Lieber jeden Tag ein bisschen als einmal pro Woche viel.'),
       h(
         'div',
         { class: 'grid' },
-        tasks.map((t) => h('button', { class: 'card', onclick: t.run }, h('strong', {}, `${doneToday(t.key) ? '✔ ' : ''}${t.title}`), h('span', { class: 'muted' }, t.detail))),
+        tasks.filter(Boolean).map((t) => h('button', { class: 'card', onclick: t.run }, h('strong', {}, `${doneToday(t.key) ? '✔ ' : ''}${t.title}`), h('span', { class: 'muted' }, t.detail))),
       ),
       h('h3', {}, 'Dazu: echtes Japanisch hören'),
       h('p', {}, 'Für flüssiges Verstehen reicht diese App nicht. Hör zusätzlich täglich 10–15 Minuten echtes Japanisch von Muttersprachlern, z. B. NHK Easy News (Nachrichten in einfacher Sprache), Videos für Lernende (Suchbegriff „Comprehensible Japanese“) oder Anime mit japanischen Untertiteln. Anfangs verstehst du wenig, das ist normal. Wichtig ist die Regelmäßigkeit.'),

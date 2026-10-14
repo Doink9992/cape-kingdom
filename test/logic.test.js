@@ -86,3 +86,15 @@ test('Wortliste (data.freq.js): Struktur, Beispielsätze, Lesungen', () => {
   // keine Einzel-Kana-Partikel (Stimme liest sie nicht sinnvoll vor)
   assert.ok(!LESSONS.ja.flatMap((l) => l.items).some((i) => Array.from(i.t).length === 1 && kanaOnly.test(i.t)));
 });
+
+test('Grammatik-Lektionen: Erklärtext, Sätze mit Umschrift, Partikel abgedeckt', () => {
+  const g = LESSONS.ja.filter((l) => l.group === 'Grammatik');
+  assert.ok(g.length >= 10);
+  for (const l of g) {
+    assert.ok(l.note && l.note.length > 60, `${l.id}: Erklärtext fehlt`);
+    assert.ok(l.items.length >= 6, `${l.id}: zu wenige Sätze`);
+    for (const it of l.items) assert.ok(it.t.endsWith('。') || /[！？]$/.test(it.t), `${it.t}: kein Satzende`);
+  }
+  const all = g.map((l) => l.note).join(' ');
+  for (const p of ['は', 'が', 'を', 'に', 'で', 'の', 'も', 'と', 'から', 'まで', 'ね', 'よ']) assert.ok(all.includes(p), `Partikel ${p} nicht erklärt`);
+});
