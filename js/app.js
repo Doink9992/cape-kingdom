@@ -92,7 +92,7 @@
   };
   const renderStats = () => {
     const done = Object.keys(state.daily[today()] || {}).length;
-    document.getElementById('stats').replaceChildren(h('span', { title: 'Serie: Tage in Folge' }, `🔥 ${streak()}`), h('span', { title: 'Punkte' }, `⭐ ${state.xp}`), h('span', { title: 'Heute erledigte Übungsarten' }, `✔ ${done}`));
+    document.getElementById('stats').replaceChildren(h('span', { class: 'chip flame', title: 'Serie: Tage in Folge' }, `🔥 ${streak()}`), h('span', { class: 'chip xp', title: 'Punkte' }, `⭐ ${state.xp}`), h('span', { class: 'chip', title: 'Heute erledigte Übungsarten' }, `✔ ${done}`));
   };
   const addXp = (n) => {
     state.xp += Math.max(0, Math.round(n));
@@ -118,6 +118,58 @@
   const startedItems = () => lessons().filter((l) => prog(l.id).started).flatMap((l) => l.items);
   const backBtn = (fn, text = '← Zurück') => h('button', { class: 'link', onclick: fn }, text);
 
+  // ---------- Bausteine für die Oberfläche ----------
+  const pageHead = (title, sub) => h('div', { class: 'pagehead' }, h('h2', {}, title), sub && h('p', { class: 'muted' }, sub));
+  const statBox = (value, label) => h('div', { class: 'statbox' }, h('b', {}, value), h('span', {}, label));
+  const bar = (v, cls = '') => {
+    const w = Math.round(Math.min(1, Math.max(0, v || 0)) * 100);
+    return h('div', { class: `bar ${cls}`, role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': w }, h('div', { class: 'fill', style: `width:${w}%` }));
+  };
+  // Kopfzeile während einer Übung: Abbrechen-Kreuz, Fortschrittsbalken, Zähler
+  const quizTop = (back, i, n) =>
+    h('div', { class: 'topbar' }, h('button', { class: 'close', title: 'Abbrechen', 'aria-label': 'Abbrechen', onclick: back }, '✕'), bar(i / n), h('span', { class: 'count' }, `${i + 1}/${n}`));
+  // Rückmeldung nach einer Antwort (grün/rot) mit Weiter-Button
+  const makeBanner = (label, onNext) => {
+    const msg = h('div', { class: 'msg' });
+    const btn = h('button', { class: 'primary', onclick: onNext }, label);
+    const el = h('div', { class: 'banner hidden', role: 'status' }, msg, btn);
+    return {
+      el,
+      reveal(right, text) {
+        el.className = `banner ${right ? 'right' : 'wrong'}`;
+        msg.textContent = `${right ? '✔ ' : '✘ '}${text}`;
+        btn.focus({ preventScroll: true });
+      },
+    };
+  };
+  const confetti = () => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const colors = ['#5b4ce0', '#ffb020', '#1fa96b', '#ff7a1a', '#e5484d', '#3aa0ff'];
+    const box = h('div', { class: 'confetti', 'aria-hidden': 'true' });
+    for (let i = 0; i < 36; i++) {
+      box.append(h('i', { style: `left:${Math.random() * 100}%;background:${colors[i % colors.length]};animation-delay:${(Math.random() * 0.6).toFixed(2)}s;animation-duration:${(1.6 + Math.random() * 1.2).toFixed(2)}s;--dx:${Math.round(Math.random() * 160 - 80)}px;--rot:${Math.round(Math.random() * 720)}deg` }));
+    }
+    document.body.append(box);
+    setTimeout(() => box.remove(), 3400);
+  };
+  // Ergebnis-Bildschirm. actions: [[Beschriftung, Funktion, primär?], …]
+  function resultScreen({ title, text, ratio, xp, actions }) {
+    const good = ratio >= 0.8;
+    show(
+      h(
+        'div',
+        { class: 'result' },
+        h('div', { class: 'trophy' }, good ? '🏆' : ratio >= 0.5 ? '👍' : '💪'),
+        h('h2', {}, title),
+        h('p', { class: 'big' }, text),
+        bar(ratio, good ? 'gold' : ''),
+        xp > 0 && h('div', { class: 'xp-chip' }, `+${Math.round(xp)} ⭐`),
+        h('div', { class: 'stack' }, actions.map(([label, fn, primary]) => h('button', { class: primary ? 'primary' : '', onclick: fn }, label))),
+      ),
+    );
+    if (good) confetti();
+  }
+
   function errMsg(e) {
     switch (e.message) {
       case 'nosupport':
@@ -137,22 +189,22 @@
   }
 
   // ---------- Navigation ----------
-  const TAB_LABELS = {
-    today: '📅 Heute',
-    kana: 'あ Kana',
-    listen: '👂 Hören',
-    lessons: '📚 Lektionen',
-    srs: '🧠 Vokabeln',
-    speak: '🎤 Sprechen',
-    chat: '💬 Gespräch',
-    settings: '⚙️ Einstellungen',
+  const TAB_INFO = {
+    today: ['📅', 'Heute'],
+    kana: ['あ', 'Kana'],
+    listen: ['👂', 'Hören'],
+    lessons: ['📚', 'Lernen'],
+    srs: ['🧠', 'Vokabeln'],
+    speak: ['🎤', 'Sprechen'],
+    chat: ['💬', 'Gespräch'],
+    settings: ['⚙️', 'Optionen'],
   };
   // Japanisch ist der Schwerpunkt: dort kommen Tagesplan und Kana-Trainer dazu.
   const tabsFor = () => (state.lang === 'ja' ? ['today', 'kana', 'listen', 'lessons', 'srs', 'speak', 'chat', 'settings'] : ['lessons', 'listen', 'srs', 'speak', 'chat', 'settings']);
   const VIEWS = { today: viewToday, kana: viewKana, listen: viewListen, lessons: viewLessons, srs: viewSrs, speak: viewSpeak, chat: viewChat, settings: viewSettings };
 
   function buildNav() {
-    nav.replaceChildren(...tabsFor().map((id) => h('button', { 'data-tab': id, onclick: () => go(id) }, TAB_LABELS[id])));
+    nav.replaceChildren(...tabsFor().map((id) => h('button', { 'data-tab': id, onclick: () => go(id) }, h('span', { class: 'ico' }, TAB_INFO[id][0]), h('span', { class: 'lbl' }, TAB_INFO[id][1]))));
   }
 
   function go(tab) {
@@ -163,6 +215,14 @@
   }
 
   // ---------- Lektionen ----------
+  const groupIcon = (g = '') => (g === 'Anime' ? '🎌' : g === 'Grammatik' ? '🧩' : g.startsWith('Häufige') ? '📚' : '🌱');
+  const mastery = (l) => {
+    const p = prog(l.id);
+    return (p.quiz + (p.listen || 0) + p.speak) / 3;
+  };
+  const lessonCard = (l, onclick, sub) =>
+    h('button', { class: 'card lesson', onclick }, h('span', { class: 'badge' }, groupIcon(l.group)), h('span', { class: 'body' }, h('strong', {}, l.title), h('span', { class: 'muted' }, sub), bar(mastery(l))));
+
   // Lektionskarten, bei Japanisch nach Gruppen (Grundlagen, Anime, Häufige Wörter …) einklappbar
   function lessonGrid(render) {
     const groups = [];
@@ -177,7 +237,7 @@
       h(
         'details',
         { class: 'group', open: !g.name.startsWith('Häufige') || g.items.some((l) => prog(l.id).started) },
-        h('summary', {}, `${g.name} (${g.items.length})`),
+        h('summary', {}, h('span', {}, `${groupIcon(g.name)} ${g.name}`), h('span', { class: 'count-pill' }, g.items.length)),
         h('div', { class: 'grid' }, g.items.map(render)),
       ),
     );
@@ -185,16 +245,10 @@
 
   function viewLessons() {
     show(
-      h('h2', {}, `${info().flag} ${info().name}`),
+      pageHead(`${info().flag} ${info().name}`, 'Wähle eine Lektion. Der Balken zeigt, wie sicher du bist (Quiz, Hören, Sprechen).'),
       lessonGrid((l) => {
         const p = prog(l.id);
-        return h(
-          'button',
-          { class: 'card', onclick: () => openLesson(l) },
-          h('strong', {}, l.title),
-          h('span', { class: 'muted' }, `${l.items.length} Einträge`),
-          h('span', { class: 'muted' }, p.started ? `Quiz ${pct(p.quiz)} · Hören ${pct(p.listen || 0)} · Sprechen ${pct(p.speak)}` : 'Noch nicht begonnen'),
-        );
+        return lessonCard(l, () => openLesson(l), p.started ? `Quiz ${pct(p.quiz)} · Hören ${pct(p.listen || 0)} · Sprechen ${pct(p.speak)}` : `${l.items.length} Einträge · noch nicht begonnen`);
       }),
     );
   }
@@ -205,8 +259,16 @@
     persist();
     show(
       backBtn(() => go('lessons')),
-      h('h2', {}, l.title),
+      pageHead(l.title, `${l.items.length} Einträge`),
       l.note && h('p', { class: 'note' }, l.note),
+      h(
+        'div',
+        { class: 'row actions' },
+        h('button', { class: 'primary', onclick: () => runQuiz(l) }, '📝 Quiz'),
+        h('button', { class: 'primary', onclick: () => listenLesson(l) }, l.group === 'Grammatik' ? '👂 Sätze hören' : '👂 Wörter hören'),
+        l.items.some((it) => it.ex) && h('button', { class: 'primary', onclick: () => listenSentences(l) }, '👂 Sätze hören'),
+        h('button', { class: 'primary', onclick: () => speakLesson(l) }, '🎤 Sprechen üben'),
+      ),
       h(
         'ul',
         { class: 'items' },
@@ -226,14 +288,6 @@
           ),
         ),
       ),
-      h(
-        'div',
-        { class: 'row' },
-        h('button', { class: 'primary', onclick: () => runQuiz(l) }, '📝 Quiz'),
-        h('button', { class: 'primary', onclick: () => listenLesson(l) }, l.group === 'Grammatik' ? '👂 Sätze hören' : '👂 Wörter hören'),
-        l.items.some((it) => it.ex) && h('button', { class: 'primary', onclick: () => listenSentences(l) }, '👂 Sätze hören'),
-        h('button', { class: 'primary', onclick: () => speakLesson(l) }, '🎤 Sprechen üben'),
-      ),
     );
   }
 
@@ -250,17 +304,18 @@
         p.quiz = Math.max(p.quiz, ok / items.length);
         addXp(ok * 10);
         markDaily('quiz');
-        return show(
-          h('h2', {}, 'Quiz beendet'),
-          h('p', { class: 'big' }, `${ok} von ${items.length} richtig (${pct(ok / items.length)})`),
-          h('div', { class: 'row' }, h('button', { onclick: () => openLesson(l) }, 'Zur Lektion'), h('button', { class: 'primary', onclick: () => runQuiz(l) }, 'Nochmal')),
-        );
+        return resultScreen({
+          title: 'Quiz beendet',
+          text: `${ok} von ${items.length} richtig (${pct(ok / items.length)})`,
+          ratio: ok / items.length,
+          xp: ok * 10,
+          actions: [['Nochmal', () => runQuiz(l), true], ['Zur Lektion', () => openLesson(l)]],
+        });
       }
       const it = items[i];
       const fromTarget = i % 2 === 0; // abwechselnd: Zielsprache -> Deutsch und Deutsch -> Zielsprache
       const opts = shuffle([it, ...shuffle(pool.filter((x) => x.de !== it.de && x.t !== it.t)).slice(0, 3)]);
-      const out = h('div', { class: 'feedback' });
-      const next = h('button', { class: 'primary hidden', onclick: () => (i++, step()) }, i + 1 < items.length ? 'Weiter' : 'Ergebnis');
+      const bn = makeBanner(i + 1 < items.length ? 'Weiter' : 'Ergebnis', () => (i++, step()));
       const btns = opts.map((o) =>
         h(
           'button',
@@ -272,8 +327,7 @@
               if (right) ok++;
               ev.currentTarget.classList.add(right ? 'right' : 'wrong');
               btns[opts.indexOf(it)].classList.add('right');
-              out.textContent = right ? 'Richtig!' : `Falsch – richtig ist: ${fromTarget ? it.de : lab(it)}`;
-              next.classList.remove('hidden');
+              bn.reveal(right, right ? 'Richtig!' : `Richtig ist: ${fromTarget ? it.de : lab(it)}`);
               Voice.speak(spoken(it), code());
             },
           },
@@ -281,12 +335,11 @@
         ),
       );
       show(
-        backBtn(() => openLesson(l), '← Abbrechen'),
-        h('p', { class: 'muted' }, `Frage ${i + 1} von ${items.length}`),
+        quizTop(() => openLesson(l), i, items.length),
+        h('p', { class: 'question' }, fromTarget ? 'Was bedeutet das?' : 'Wie sagt man das auf Japanisch?'.replace('Japanisch', info().name)),
         fromTarget ? h('div', { class: 'prompt' }, h('span', { class: 'big' }, lab(it)), audioBtn(it)) : h('div', { class: 'prompt' }, h('span', { class: 'big' }, it.de)),
         h('div', { class: 'options' }, btns),
-        out,
-        next,
+        bn.el,
       );
     };
     step();
@@ -300,10 +353,12 @@
       if (i >= items.length) return onDone(best);
       const it = items[i];
       const out = h('div', { class: 'feedback' });
-      const mic = h('button', { class: 'primary' }, '🎤 Sprechen');
+      const label = h('div', { class: 'muted' }, 'Tippen und sprechen');
+      const mic = h('button', { class: 'mic', 'aria-label': 'Sprechen' }, '🎤');
       mic.addEventListener('click', async () => {
         mic.disabled = true;
-        mic.textContent = '🎙️ Ich höre zu…';
+        mic.classList.add('listening');
+        label.textContent = 'Ich höre zu…';
         out.className = 'feedback';
         out.textContent = '';
         try {
@@ -317,16 +372,18 @@
           out.textContent = errMsg(e);
         }
         mic.disabled = false;
-        mic.textContent = '🎤 Sprechen';
+        mic.classList.remove('listening');
+        label.textContent = 'Nochmal versuchen';
       });
       show(
-        backBtn(() => onDone(best, true), '← Beenden'),
-        h('p', { class: 'muted' }, `Satz ${i + 1} von ${items.length}`),
+        quizTop(() => onDone(best, true), i, items.length),
         !Voice.canListen && h('p', { class: 'feedback wrong' }, errMsg(new Error('nosupport'))),
+        h('p', { class: 'question' }, 'Sprich den Satz nach'),
         h('div', { class: 'prompt' }, h('div', { class: 'big' }, it.t), it.r && h('div', { class: 'muted' }, it.r), h('div', {}, it.de)),
-        h('div', { class: 'row' }, h('button', { onclick: () => Voice.speak(spoken(it), code()) }, '🔊 Anhören'), Voice.canListen && mic),
+        h('div', { class: 'row center' }, h('button', { onclick: () => Voice.speak(spoken(it), code()) }, '🔊 Anhören'), h('button', { onclick: () => Voice.speak(spoken(it), code(), 0.55) }, '🐢 Langsam')),
+        Voice.canListen && h('div', { class: 'micwrap' }, mic, label),
         out,
-        h('button', { class: 'primary', onclick: () => (i++, step()) }, i + 1 < items.length ? 'Weiter' : 'Fertig'),
+        h('button', { class: 'primary wide', onclick: () => (i++, step()) }, i + 1 < items.length ? 'Weiter' : 'Fertig'),
       );
     };
     step();
@@ -340,20 +397,21 @@
       addXp(avg * 50);
       markDaily('speak');
       if (aborted) return openLesson(l);
-      show(
-        h('h2', {}, 'Geschafft'),
-        h('p', { class: 'big' }, `Durchschnitt: ${pct(avg)}`),
-        h('div', { class: 'row' }, h('button', { onclick: () => openLesson(l) }, 'Zur Lektion'), h('button', { class: 'primary', onclick: () => speakLesson(l) }, 'Nochmal')),
-      );
+      resultScreen({
+        title: 'Geschafft',
+        text: `Durchschnitt: ${pct(avg)}`,
+        ratio: avg,
+        xp: avg * 50,
+        actions: [['Nochmal', () => speakLesson(l), true], ['Zur Lektion', () => openLesson(l)]],
+      });
     });
   }
 
   function viewSpeak() {
     show(
-      h('h2', {}, `Sprechen üben – ${info().name}`),
+      pageHead(`🎤 Sprechen – ${info().name}`, 'Du hörst den Satz, sprichst ihn nach, und die App vergleicht, was sie verstanden hat.'),
       !Voice.canListen && h('p', { class: 'feedback wrong' }, errMsg(new Error('nosupport'))),
-      h('p', { class: 'muted' }, 'Wähle eine Lektion. Du hörst den Satz, sprichst ihn nach, und die App vergleicht, was sie verstanden hat.'),
-      lessonGrid((l) => h('button', { class: 'card', onclick: () => speakLesson(l) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).speak)}`))),
+      lessonGrid((l) => lessonCard(l, () => speakLesson(l), `Bestwert ${pct(prog(l.id).speak)}`)),
     );
   }
 
@@ -363,7 +421,10 @@
   function viewSrs() {
     const started = lessons().filter((l) => prog(l.id).started);
     if (!started.length) {
-      return show(h('h2', {}, 'Vokabeln'), h('p', {}, 'Öffne zuerst eine Lektion – ihre Wörter landen dann hier im Wiederholungstrainer.'), h('button', { class: 'primary', onclick: () => go('lessons') }, 'Zu den Lektionen'));
+      return show(
+        pageHead('🧠 Vokabeln'),
+        h('div', { class: 'empty' }, h('div', { class: 'trophy' }, '📭'), h('p', {}, 'Öffne zuerst eine Lektion. Ihre Wörter landen dann hier im Wiederholungstrainer.'), h('button', { class: 'primary', onclick: () => go('lessons') }, 'Zu den Lektionen')),
+      );
     }
     const now = Date.now();
     const all = started.flatMap((l) => l.items);
@@ -372,9 +433,10 @@
     const queue = shuffle([...due, ...fresh]);
     const known = all.filter((it) => (state.srs[srsKey(it)]?.box ?? 0) >= 3).length;
     show(
-      h('h2', {}, `Vokabeln – ${info().name}`),
-      h('p', {}, `Fällig: ${due.length} · Neu heute: ${fresh.length} · Gefestigt: ${known} von ${all.length}`),
-      queue.length ? h('button', { class: 'primary', onclick: () => runCards(queue) }, `Training starten (${queue.length} Karten)`) : h('p', {}, 'Heute ist nichts mehr fällig 🎉'),
+      pageHead(`🧠 Vokabeln – ${info().name}`),
+      h('div', { class: 'statrow' }, statBox(due.length, 'fällig'), statBox(fresh.length, 'neu heute'), statBox(`${known}/${all.length}`, 'gefestigt')),
+      bar(all.length ? known / all.length : 0),
+      queue.length ? h('button', { class: 'primary wide', onclick: () => runCards(queue) }, `Training starten (${queue.length} Karten)`) : h('div', { class: 'empty' }, h('div', { class: 'trophy' }, '🎉'), h('p', {}, 'Heute ist nichts mehr fällig.')),
     );
   }
 
@@ -385,13 +447,13 @@
       if (!q.length) {
         markDaily('srs');
         addXp(total * 5);
-        return show(h('h2', {}, 'Fertig 🎉'), h('p', {}, `${total} Karten wiederholt.`), h('button', { onclick: viewSrs }, 'Zurück'));
+        return resultScreen({ title: 'Fertig', text: `${total} Karten wiederholt`, ratio: 1, xp: total * 5, actions: [['Zurück', viewSrs, true]] });
       }
       const it = q[0];
       const key = srsKey(it);
       const answers = h(
         'div',
-        { class: 'row hidden' },
+        { class: 'row hidden split' },
         h(
           'button',
           {
@@ -419,11 +481,11 @@
           'Gewusst',
         ),
       );
-      const back = h('div', { class: 'hidden' }, h('div', { class: 'big' }, it.t), it.r && h('div', { class: 'muted' }, it.r));
+      const back = h('div', { class: 'hidden flash-back' }, h('div', { class: 'big' }, it.t), it.r && h('div', { class: 'muted' }, it.r));
       const reveal = h(
         'button',
         {
-          class: 'primary',
+          class: 'primary wide',
           onclick: () => {
             back.classList.remove('hidden');
             answers.classList.remove('hidden');
@@ -433,7 +495,7 @@
         },
         'Antwort zeigen',
       );
-      show(backBtn(viewSrs, '← Beenden'), h('p', { class: 'muted' }, `Noch ${q.length} Karten`), h('div', { class: 'prompt' }, h('div', { class: 'big' }, it.de)), back, reveal, answers);
+      show(quizTop(viewSrs, total - q.length, total), h('p', { class: 'question' }, 'Wie heißt das auf Japanisch?'.replace('Japanisch', info().name)), h('div', { class: 'prompt flash' }, h('div', { class: 'big' }, it.de), back), reveal, answers);
     };
     step();
   }
@@ -581,15 +643,19 @@
   function viewListen() {
     const started = startedItems();
     show(
-      h('h2', {}, `Hörtraining – ${info().name}`),
-      h('p', {}, 'Du hörst ein Wort oder einen Satz und wählst die Bedeutung. Der Text wird erst nach deiner Antwort gezeigt.'),
-      h('p', { class: 'muted' }, 'Hinweis: Die Stimme ist synthetisch. Sie trainiert Wörter und Satzmelodie, ersetzt aber kein echtes, schnelles Japanisch von Muttersprachlern.'),
+      pageHead(`👂 Hörtraining – ${info().name}`, 'Du hörst ein Wort oder einen Satz und wählst die Bedeutung. Der Text erscheint erst nach deiner Antwort.'),
+      h('p', { class: 'note' }, 'Die Stimme ist synthetisch. Sie trainiert Wörter und Satzmelodie, ersetzt aber kein echtes, schnelles Japanisch von Muttersprachlern.'),
       h(
         'div',
         { class: 'grid' },
-        h('button', { class: 'card', disabled: !started.length, onclick: () => listenMixed() }, h('strong', {}, 'Gemischt'), h('span', { class: 'muted' }, started.length ? `aus ${started.length} Einträgen deiner begonnenen Lektionen` : 'Starte zuerst eine Lektion')),
+        h(
+          'button',
+          { class: 'card lesson', disabled: !started.length, onclick: () => listenMixed() },
+          h('span', { class: 'badge' }, '🎲'),
+          h('span', { class: 'body' }, h('strong', {}, 'Gemischt'), h('span', { class: 'muted' }, started.length ? `aus ${started.length} Einträgen deiner begonnenen Lektionen` : 'Starte zuerst eine Lektion')),
+        ),
       ),
-      lessonGrid((l) => h('button', { class: 'card', onclick: () => listenLesson(l) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).listen || 0)}`))),
+      lessonGrid((l) => lessonCard(l, () => listenLesson(l), `Bestwert ${pct(prog(l.id).listen || 0)}`)),
     );
   }
 
@@ -623,11 +689,13 @@
   }
 
   function listenResult(ok, n, again) {
-    show(
-      h('h2', {}, 'Hörtraining beendet'),
-      h('p', { class: 'big' }, `${ok} von ${n} richtig (${pct(ok / n)})`),
-      h('div', { class: 'row' }, h('button', { onclick: viewListen }, 'Zur Übersicht'), h('button', { class: 'primary', onclick: again }, 'Nochmal')),
-    );
+    resultScreen({
+      title: 'Hörtraining beendet',
+      text: `${ok} von ${n} richtig (${pct(ok / n)})`,
+      ratio: ok / n,
+      xp: ok * 10,
+      actions: [['Nochmal', again, true], ['Zur Übersicht', viewListen]],
+    });
   }
 
   function runListening(items, onDone, back, pool = lessons().flatMap((l) => l.items)) {
@@ -641,9 +709,8 @@
       }
       const it = qs[i];
       const opts = shuffle([it, ...shuffle(pool.filter((x) => x.de !== it.de && x.t !== it.t)).slice(0, 3)]);
-      const reveal = h('div', { class: 'hidden prompt' }, h('div', {}, h('div', { class: 'big' }, it.t), it.r && h('div', { class: 'muted' }, it.r)));
-      const out = h('div', { class: 'feedback' });
-      const next = h('button', { class: 'primary hidden', onclick: () => (i++, step()) }, i + 1 < qs.length ? 'Weiter' : 'Ergebnis');
+      const reveal = h('div', { class: 'hidden reveal' }, h('div', { class: 'big' }, it.t), it.r && h('div', { class: 'muted' }, it.r));
+      const bn = makeBanner(i + 1 < qs.length ? 'Weiter' : 'Ergebnis', () => (i++, step()));
       const btns = opts.map((o) =>
         h(
           'button',
@@ -655,23 +722,21 @@
               if (right) ok++;
               ev.currentTarget.classList.add(right ? 'right' : 'wrong');
               btns[opts.indexOf(it)].classList.add('right');
-              out.textContent = right ? 'Richtig!' : `Falsch – gemeint war: ${it.de}`;
+              bn.reveal(right, right ? 'Richtig!' : `Gemeint war: ${it.de}`);
               reveal.classList.remove('hidden');
-              next.classList.remove('hidden');
             },
           },
           o.de,
         ),
       );
       show(
-        backBtn(back, '← Abbrechen'),
-        h('p', { class: 'muted' }, `Frage ${i + 1} von ${qs.length} – Was bedeutet das?`),
-        h('div', { class: 'row' }, h('button', { class: 'primary', onclick: () => Voice.speak(spoken(it), code()) }, '🔊 Nochmal hören'), h('button', { onclick: () => Voice.speak(spoken(it), code(), 0.55) }, '🐢 Langsam')),
+        quizTop(back, i, qs.length),
+        h('p', { class: 'question' }, 'Was bedeutet das?'),
+        h('div', { class: 'row center' }, h('button', { class: 'speaker', 'aria-label': 'Nochmal hören', onclick: () => Voice.speak(spoken(it), code()) }, '🔊'), h('button', { onclick: () => Voice.speak(spoken(it), code(), 0.55) }, '🐢 Langsam')),
         !Voice.canSpeak && h('p', { class: 'feedback wrong' }, 'Dein Browser hat keine Sprachausgabe.'),
-        h('div', { class: 'options' }, btns),
-        out,
         reveal,
-        next,
+        h('div', { class: 'options' }, btns),
+        bn.el,
       );
       Voice.speak(spoken(it), code());
     };
@@ -684,6 +749,8 @@
   const kanaGroups = () => [...KANA.hira, ...KANA.kata];
 
   function viewKana() {
+    const all = kanaGroups();
+    const learned = all.filter((g) => prog(g.id).quiz >= KANA_PASS).length;
     const section = (script) => [
       h('h3', {}, KANA.names[script]),
       h(
@@ -691,20 +758,23 @@
         { class: 'grid' },
         KANA[script].map((g) => {
           const p = prog(g.id);
+          const done = p.quiz >= KANA_PASS;
           return h(
             'button',
-            { class: 'card', onclick: () => studyGroup(g) },
+            { class: `card kana-card${done ? ' done' : ''}`, onclick: () => studyGroup(g) },
             h('span', { class: 'kana-preview' }, g.chars.map((c) => c.k).join(' ')),
             h('strong', {}, g.label),
-            h('span', { class: 'muted' }, p.quiz >= KANA_PASS ? `✔ ${pct(p.quiz)}` : p.started ? `Quiz ${pct(p.quiz)}` : 'neu'),
+            h('span', { class: 'muted' }, done ? `✔ gelernt (${pct(p.quiz)})` : p.started ? `Quiz ${pct(p.quiz)}` : 'neu'),
+            bar(p.quiz),
           );
         }),
       ),
     ];
     show(
-      h('h2', {}, 'Kana lernen'),
-      h('p', {}, 'Fang mit Hiragana an, dann Katakana. Pro Gruppe: ansehen, anhören, Quiz (ab 80 % gilt sie als gelernt). Plane etwa 5–10 Minuten pro Gruppe.'),
-      h('button', { class: 'primary', onclick: kanaReview }, '🔁 Wiederholung'),
+      pageHead('あ Kana lernen', 'Erst Hiragana, dann Katakana. Pro Gruppe: ansehen, anhören, Quiz (ab 80 % gilt sie als gelernt). Plane etwa 5–10 Minuten pro Gruppe.'),
+      h('div', { class: 'statrow' }, statBox(`${learned}/${all.length}`, 'Gruppen gelernt')),
+      bar(learned / all.length),
+      h('button', { class: 'primary wide', onclick: kanaReview }, '🔁 Wiederholung'),
       section('hira'),
       section('kata'),
     );
@@ -715,14 +785,13 @@
     persist();
     show(
       backBtn(() => go('kana')),
-      h('h2', {}, `${KANA.names[g.script]} – ${g.label}`),
-      h('p', { class: 'muted' }, 'Tippe auf ein Zeichen zum Anhören. Die Stimme liest einzelne Zeichen nicht immer perfekt vor.'),
+      pageHead(`${KANA.names[g.script]} – ${g.label}`, 'Tippe auf ein Zeichen zum Anhören. Die Stimme liest einzelne Zeichen nicht immer perfekt vor.'),
       h(
         'div',
         { class: 'tiles' },
         g.chars.map((c) => h('button', { class: 'tile', onclick: () => Voice.speak(c.k, code()) }, h('span', { class: 'kana' }, c.k), h('span', { class: 'muted' }, c.r))),
       ),
-      h('div', { class: 'row' }, h('button', { class: 'primary', onclick: () => groupQuiz(g) }, '📝 Quiz zu dieser Gruppe')),
+      h('button', { class: 'primary wide', onclick: () => groupQuiz(g) }, '📝 Quiz zu dieser Gruppe'),
     );
   }
 
@@ -735,24 +804,25 @@
       markDaily('kana');
       const idx = kanaGroups().indexOf(g);
       const next = kanaGroups()[idx + 1];
-      show(
-        h('h2', {}, ok / n >= KANA_PASS ? 'Gruppe geschafft ✔' : 'Noch nicht ganz'),
-        h('p', { class: 'big' }, `${ok} von ${n} richtig (${pct(ok / n)})`),
-        h(
-          'div',
-          { class: 'row' },
-          h('button', { onclick: () => studyGroup(g) }, 'Zur Gruppe'),
-          h('button', { onclick: () => groupQuiz(g) }, 'Nochmal'),
-          ok / n >= KANA_PASS && next && h('button', { class: 'primary', onclick: () => studyGroup(next) }, `Weiter: ${KANA.names[next.script]} ${next.label}`),
-          h('button', { onclick: () => go('kana') }, 'Übersicht'),
-        ),
-      );
+      const passed = ok / n >= KANA_PASS;
+      resultScreen({
+        title: passed ? 'Gruppe geschafft ✔' : 'Noch nicht ganz',
+        text: `${ok} von ${n} richtig (${pct(ok / n)})`,
+        ratio: ok / n,
+        xp: ok * 10,
+        actions: [
+          passed && next ? [`Weiter: ${KANA.names[next.script]} ${next.label}`, () => studyGroup(next), true] : ['Nochmal', () => groupQuiz(g), true],
+          passed && ['Nochmal', () => groupQuiz(g)],
+          ['Zur Gruppe', () => studyGroup(g)],
+          ['Übersicht', () => go('kana')],
+        ].filter(Boolean),
+      });
     }, () => go('kana'));
   }
 
   function kanaReview() {
     const pool = kanaGroups().filter((g) => prog(g.id).started).flatMap((g) => g.chars);
-    if (!pool.length) return show(backBtn(() => go('kana')), h('p', {}, 'Öffne zuerst eine Kana-Gruppe, dann gibt es etwas zu wiederholen.'));
+    if (!pool.length) return show(backBtn(() => go('kana')), h('div', { class: 'empty' }, h('div', { class: 'trophy' }, '📭'), h('p', {}, 'Öffne zuerst eine Kana-Gruppe, dann gibt es etwas zu wiederholen.')));
     const now = Date.now();
     const due = pool.filter((c) => state.srs[`kana|${c.k}`]?.due <= now);
     const fresh = pool.filter((c) => !state.srs[`kana|${c.k}`]);
@@ -760,11 +830,13 @@
     const targets = qs.length ? qs : shuffle(pool).slice(0, 10); // nichts fällig -> freie Übung
     runKanaQuiz(targets, (ok, n) => {
       markDaily('kana');
-      show(
-        h('h2', {}, 'Wiederholung beendet'),
-        h('p', { class: 'big' }, `${ok} von ${n} richtig (${pct(ok / n)})`),
-        h('div', { class: 'row' }, h('button', { onclick: () => go('kana') }, 'Übersicht'), h('button', { class: 'primary', onclick: kanaReview }, 'Nochmal')),
-      );
+      resultScreen({
+        title: 'Wiederholung beendet',
+        text: `${ok} von ${n} richtig (${pct(ok / n)})`,
+        ratio: ok / n,
+        xp: ok * 10,
+        actions: [['Nochmal', kanaReview, true], ['Übersicht', () => go('kana')]],
+      });
     }, () => go('kana'));
   }
 
@@ -782,8 +854,7 @@
       const same = KANA[c.script].flatMap((g) => g.chars);
       const wrong = shuffle(same.filter((x) => x.k !== c.k && x.r !== c.r)).slice(0, 3);
       const opts = shuffle([c, ...wrong]);
-      const out = h('div', { class: 'feedback' });
-      const next = h('button', { class: 'primary hidden', onclick: () => (i++, step()) }, i + 1 < qs.length ? 'Weiter' : 'Ergebnis');
+      const bn = makeBanner(i + 1 < qs.length ? 'Weiter' : 'Ergebnis', () => (i++, step()));
       const btns = opts.map((o) =>
         h(
           'button',
@@ -796,8 +867,7 @@
               gradeKey(`kana|${c.k}`, right);
               ev.currentTarget.classList.add(right ? 'right' : 'wrong');
               btns[opts.indexOf(c)].classList.add('right');
-              out.textContent = right ? 'Richtig!' : `Falsch – ${c.k} = ${c.r}`;
-              next.classList.remove('hidden');
+              bn.reveal(right, right ? 'Richtig!' : `${c.k} = ${c.r}`);
               if (!hear) Voice.speak(c.k, code());
             },
           },
@@ -805,14 +875,13 @@
         ),
       );
       show(
-        backBtn(back, '← Abbrechen'),
-        h('p', { class: 'muted' }, `Frage ${i + 1} von ${qs.length}`),
+        quizTop(back, i, qs.length),
+        h('p', { class: 'question' }, hear ? 'Welches Zeichen hörst du?' : 'Wie wird das Zeichen gesprochen?'),
         hear
-          ? h('div', { class: 'prompt' }, h('button', { class: 'primary', onclick: () => Voice.speak(c.k, code()) }, '🔊 Welches Zeichen ist das?'))
+          ? h('div', { class: 'prompt' }, h('button', { class: 'speaker', 'aria-label': 'Nochmal hören', onclick: () => Voice.speak(c.k, code()) }, '🔊'))
           : h('div', { class: 'prompt' }, h('span', { class: 'kana big-kana' }, c.k)),
         h('div', { class: `options ${hear ? 'kana-options' : ''}` }, btns),
-        out,
-        next,
+        bn.el,
       );
       if (hear) Voice.speak(c.k, code());
     };
@@ -831,12 +900,14 @@
     const tasks = [
       {
         key: 'kana',
+        icon: 'あ',
         title: nextGroup ? `Kana: ${KANA.names[nextGroup.script]} – ${nextGroup.label}` : 'Kana wiederholen',
         detail: nextGroup ? 'Neue Gruppe ansehen und üben, ca. 8 Min.' : 'Alle Gruppen geschafft. Kurze Wiederholung, ca. 3 Min.',
         run: () => (nextGroup ? studyGroup(nextGroup) : kanaReview()),
       },
       (nextGrammar || doneToday('grammar')) && {
         key: 'grammar',
+        icon: '🧩',
         title: doneToday('grammar') || !nextGrammar ? 'Grammatik' : `Grammatik: ${shortGrammar(nextGrammar)}`,
         detail: doneToday('grammar')
           ? `Heute erledigt.${nextGrammar ? ` Nächste Lektion: ${shortGrammar(nextGrammar)}` : ''}`
@@ -845,27 +916,41 @@
       },
       {
         key: 'srs',
+        icon: '🧠',
         title: 'Vokabeln wiederholen',
         detail: all.length ? `${due} fällig, ${Math.min(fresh, 10)} neu, ca. 5 Min.` : 'Öffne zuerst eine Lektion (z. B. „Begrüßung“).',
         run: () => (all.length ? go('srs') : go('lessons')),
       },
       {
         key: 'listen',
+        icon: '👂',
         title: 'Hörtraining: 10 Fragen',
         detail: all.length ? 'Wörter und Sätze nur hören, ca. 5 Min.' : 'Starte zuerst eine Lektion.',
         run: () => (all.length ? listenMixed() : go('lessons')),
       },
-    ];
+    ].filter(Boolean);
+    const doneCount = tasks.filter((t) => doneToday(t.key)).length;
+    const hour = new Date().getHours();
+    const [jp, de] = hour < 11 ? ['おはよう', 'Guten Morgen'] : hour < 18 ? ['こんにちは', 'Guten Tag'] : ['こんばんは', 'Guten Abend'];
     show(
-      h('h2', {}, `📅 Heute – ${new Date().toLocaleDateString('de-DE')}`),
-      h('p', { class: 'muted' }, 'Rund 20–25 Minuten. Lieber jeden Tag ein bisschen als einmal pro Woche viel.'),
+      h(
+        'section',
+        { class: 'hero' },
+        h('div', { class: 'hero-top' }, h('div', {}, h('div', { class: 'hello' }, jp), h('h2', {}, de)), h('div', { class: 'flame', title: 'Serie' }, h('span', {}, '🔥'), h('b', {}, streak()), h('small', {}, streak() === 1 ? 'Tag' : 'Tage'))),
+        h('p', {}, doneCount === tasks.length ? 'Alles geschafft, stark! 🎉' : `${doneCount} von ${tasks.length} Aufgaben erledigt · ca. 20–25 Min.`),
+        bar(doneCount / tasks.length, 'on-hero'),
+      ),
+      h('h3', {}, 'Dein Plan für heute'),
       h(
         'div',
-        { class: 'grid' },
-        tasks.filter(Boolean).map((t) => h('button', { class: 'card', onclick: t.run }, h('strong', {}, `${doneToday(t.key) ? '✔ ' : ''}${t.title}`), h('span', { class: 'muted' }, t.detail))),
+        { class: 'tasks' },
+        tasks.map((t) => {
+          const done = doneToday(t.key);
+          return h('button', { class: `card task${done ? ' done' : ''}`, onclick: t.run }, h('span', { class: 'check' }, done ? '✔' : t.icon), h('span', { class: 'body' }, h('strong', {}, t.title), h('span', { class: 'muted' }, t.detail)));
+        }),
       ),
       h('h3', {}, 'Dazu: echtes Japanisch hören'),
-      h('p', {}, 'Für flüssiges Verstehen reicht diese App nicht. Hör zusätzlich täglich 10–15 Minuten echtes Japanisch von Muttersprachlern, z. B. NHK Easy News (Nachrichten in einfacher Sprache), Videos für Lernende (Suchbegriff „Comprehensible Japanese“) oder Anime mit japanischen Untertiteln. Anfangs verstehst du wenig, das ist normal. Wichtig ist die Regelmäßigkeit.'),
+      h('p', { class: 'note' }, 'Für flüssiges Verstehen reicht diese App nicht. Hör zusätzlich täglich 10–15 Minuten echtes Japanisch von Muttersprachlern, z. B. NHK Easy News (Nachrichten in einfacher Sprache), Videos für Lernende (Suchbegriff „Comprehensible Japanese“) oder Anime mit japanischen Untertiteln. Anfangs verstehst du wenig, das ist normal. Wichtig ist die Regelmäßigkeit.'),
     );
   }
 

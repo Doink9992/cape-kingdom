@@ -5,6 +5,7 @@ Reines HTML/CSS/JS, kein Build, kein Server-Backend. Japanisch ist der Schwerpun
 
 ## Funktionen
 
+- **Oberfläche**: moderne, kontrastreiche Gestaltung mit Hell-/Dunkelmodus, Tab-Leiste unten am Handy (oben am Desktop), Fortschrittsbalken, grünes/rotes Feedback nach jeder Antwort, Ergebnis-Bildschirm mit Konfetti. Animationen werden bei „Bewegung reduzieren“ abgeschaltet.
 - **Serie und Punkte**: Tage in Folge (🔥) und Punkte (⭐) für Quiz, Hören, Kana, Vokabeln und Sprechen, angezeigt oben.
 - **Heute** (nur Japanisch): Tagesplan für ca. 20–25 Minuten: Kana, Grammatik (solange neue Lektionen anstehen), Vokabeln wiederholen, Hörtraining.
 - **Kana-Trainer** (nur Japanisch): Hiragana und Katakana in 15 Gruppen je Schrift (inkl. ゛/゜ und Kombinationen wie きゃ). Zeichen ansehen und anhören, Quiz in zwei Richtungen (Zeichen → Umschrift, Hören → Zeichen). Gruppe gilt ab 80 % als gelernt. Falsche Zeichen kommen früher zur Wiederholung.

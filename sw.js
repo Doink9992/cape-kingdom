@@ -1,6 +1,6 @@
 // Offline-Cache: App-Dateien werden beim ersten Start gespeichert. Danach "stale-while-revalidate":
 // sofort aus dem Cache, im Hintergrund aktualisiert (Updates erscheinen beim nächsten Öffnen).
-const CACHE = 'sprachtrainer-v1';
+const CACHE = 'sprachtrainer-v2';
 const FILES = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'js/data.js', 'js/data.freq.js', 'js/kana.js', 'js/speech.js', 'js/ai.js', 'js/app.js'];
 
 self.addEventListener('install', (e) => {
