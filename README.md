@@ -19,12 +19,11 @@ Reines HTML/CSS/JS, kein Build, kein Server-Backend. Japanisch ist der Schwerpun
 
 ## Von überall starten (Hosting + App installieren)
 
-Die App ist eine installierbare Web-App (PWA) mit Offline-Modus. Sie läuft auf GitHub Pages, sobald das einmal aktiviert ist:
+Die App ist eine installierbare Web-App (PWA) mit Offline-Modus und wird bei jedem Push auf `main` automatisch auf GitHub Pages veröffentlicht (Workflow `.github/workflows/pages.yml`: erst die Tests, dann das Deployment).
 
-1. Pull Request nach `main` mergen (der Workflow `.github/workflows/pages.yml` startet bei jedem Push auf `main`).
-2. Im GitHub-Repo: **Settings → Pages → Build and deployment → Source: „GitHub Actions“** einstellen. Das geht nicht automatisch, weil dafür Admin-Rechte nötig sind. Danach den Workflow „Pages“ unter **Actions** erneut starten.
-3. Die Adresse steht danach unter Settings → Pages, normalerweise `https://<benutzer>.github.io/cape-kingdom/`.
-4. Am Handy im Browser öffnen und „Zum Startbildschirm hinzufügen“ (Chrome: Menü → „App installieren“, Safari: Teilen → „Zum Home-Bildschirm“). Nach dem ersten Laden funktioniert sie auch ohne Internet (nur Spracherkennung und KI-Gespräch brauchen Netz).
+1. Adresse (bei Standard-Einstellungen): `https://doink9992.github.io/cape-kingdom/`. Die genaue Adresse steht unter Settings → Pages bzw. im Lauf des Workflows „Pages“.
+2. Falls das Deployment mit „Pages not enabled“ o. Ä. scheitert: im Repo **Settings → Pages → Build and deployment → Source: „GitHub Actions“** einstellen und den Workflow unter **Actions** neu starten.
+3. Am Handy im Browser öffnen und „Zum Startbildschirm hinzufügen“ (Chrome: Menü → „App installieren“, Safari: Teilen → „Zum Home-Bildschirm“). Nach dem ersten Laden funktioniert sie auch ohne Internet (nur Spracherkennung und KI-Gespräch brauchen Netz).
 
 Hinweise: Bei privaten Repos braucht GitHub Pages je nach Tarif ein bezahltes Konto. Updates erscheinen nach dem nächsten Öffnen (Cache wird im Hintergrund erneuert). Dein Fortschritt liegt pro Gerät im Browser und wird nicht zwischen Geräten synchronisiert.
 
