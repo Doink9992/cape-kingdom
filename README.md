@@ -26,7 +26,7 @@ Spracherkennung funktioniert nur über `https://` oder `localhost` und nur in **
 ## Grenzen
 
 - **Die App allein führt nicht zu flüssigem Hörverstehen.** Die Stimme ist synthetisch und spricht langsam und deutlich. Dazu braucht es täglich echtes Japanisch von Muttersprachlern (z. B. NHK Easy News, Videos für Lernende, Anime mit japanischen Untertiteln). Realistisch dauert das Jahre, nicht Wochen.
-- Kanji, Grammatik-Erklärungen und eine große Wortschatzliste nach Häufigkeit fehlen noch. Der Wortschatz umfasst rund 570 Einträge, für flüssiges Verstehen wären mehrere Tausend nötig.
+- Kanji-Training und Grammatik-Erklärungen fehlen noch. Der Wortschatz umfasst rund 570 Einträge, für flüssiges Verstehen wären mehrere Tausend nötig.
 - **Die Wortliste ist nicht geprüft:** Sie wurde von KI-Modellen aus dem Gedächtnis geschrieben, nicht nach einer Häufigkeitsstatistik sortiert und nicht von Muttersprachlern korrigiert. Lesungen und Romaji wurden maschinell auf Übereinstimmung geprüft, die Bedeutungen und Beispielsätze stichprobenartig gelesen. Einzelne Fehler sind möglich.
 - Grammatik fehlt: Partikel (は, が, を, に …) kommen nur in Beispielsätzen vor und werden nicht erklärt.
 - Einzelne Kana und Kanji werden von der Browser-Stimme nicht immer perfekt gelesen. Fürs Vorlesen wird deshalb wo möglich die Kana-Schreibweise genutzt.
