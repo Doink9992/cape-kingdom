@@ -76,3 +76,5 @@ details.group > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
 details.group > .grid { margin-top: 8px; }
 .example { display: flex; gap: 6px; align-items: flex-start; margin-top: 6px; padding-left: 8px; border-left: 3px solid var(--line); }
 .note { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 12px; }
+.stats { display: flex; gap: 10px; font-weight: 600; margin-left: auto; white-space: nowrap; }
+header { flex-wrap: wrap; }

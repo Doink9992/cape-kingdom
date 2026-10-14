@@ -52,6 +52,7 @@
     tab: 'lessons',
     progress: store.load('progress', {}),
     srs: store.load('srs', {}),
+    xp: store.load('xp', 0),
     daily: store.load('daily', {}), // { 'JJJJ-MM-TT': { kana: true, srs: true, listen: true } }
     settings: { apiKey: '', model: 'claude-haiku-5-5', autoSpeak: true, ...store.load('settings', {}) },
   };
@@ -61,6 +62,7 @@
     store.save('progress', state.progress);
     store.save('srs', state.srs);
     store.save('daily', state.daily);
+    store.save('xp', state.xp);
     store.save('settings', state.settings);
   };
   const info = () => LANGS[state.lang];
@@ -75,10 +77,32 @@
   const KANA_ONLY = /^[\u3040-\u30ff]+$/;
   const spoken = (it) => (KANA_ONLY.test(it.t) ? it.t : it.alt?.find((a) => KANA_ONLY.test(a)) || it.t);
   const audioBtn = (x) => h('button', { class: 'icon', title: 'Anhören', onclick: () => Voice.speak(typeof x === 'string' ? x : spoken(x), code()) }, '🔊');
-  const today = () => new Date().toISOString().slice(0, 10);
+  const fmtDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = () => fmtDay(new Date());
+  // Serie: aufeinanderfolgende Tage mit Aktivität. Ist heute noch nichts passiert, zählt die Serie bis gestern weiter.
+  const streak = () => {
+    const d = new Date();
+    if (!state.daily[fmtDay(d)]) d.setDate(d.getDate() - 1);
+    let n = 0;
+    while (state.daily[fmtDay(d)]) {
+      n++;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  };
+  const renderStats = () => {
+    const done = Object.keys(state.daily[today()] || {}).length;
+    document.getElementById('stats').replaceChildren(h('span', { title: 'Serie: Tage in Folge' }, `🔥 ${streak()}`), h('span', { title: 'Punkte' }, `⭐ ${state.xp}`), h('span', { title: 'Heute erledigte Übungsarten' }, `✔ ${done}`));
+  };
+  const addXp = (n) => {
+    state.xp += Math.max(0, Math.round(n));
+    persist();
+    renderStats();
+  };
   const markDaily = (task) => {
     (state.daily[today()] ||= {})[task] = true;
     persist();
+    renderStats();
   };
   const doneToday = (task) => !!state.daily[today()]?.[task];
   // Leitner-Bewertung für beliebige Schlüssel (Vokabeln, Kana)
@@ -224,7 +248,8 @@
       if (i >= items.length) {
         const p = prog(l.id);
         p.quiz = Math.max(p.quiz, ok / items.length);
-        persist();
+        addXp(ok * 10);
+        markDaily('quiz');
         return show(
           h('h2', {}, 'Quiz beendet'),
           h('p', { class: 'big' }, `${ok} von ${items.length} richtig (${pct(ok / items.length)})`),
@@ -312,7 +337,8 @@
       const avg = best.reduce((a, b) => a + b, 0) / best.length;
       const p = prog(l.id);
       p.speak = Math.max(p.speak, avg);
-      persist();
+      addXp(avg * 50);
+      markDaily('speak');
       if (aborted) return openLesson(l);
       show(
         h('h2', {}, 'Geschafft'),
@@ -358,6 +384,7 @@
     const step = () => {
       if (!q.length) {
         markDaily('srs');
+        addXp(total * 5);
         return show(h('h2', {}, 'Fertig 🎉'), h('p', {}, `${total} Karten wiederholt.`), h('button', { onclick: viewSrs }, 'Zurück'));
       }
       const it = q[0];
@@ -537,6 +564,8 @@
             if (confirm('Gesamten Lernfortschritt wirklich löschen?')) {
               state.progress = {};
               state.srs = {};
+              state.daily = {};
+              state.xp = 0;
               persist();
               go('lessons');
             }
@@ -607,7 +636,7 @@
     let ok = 0;
     const step = () => {
       if (i >= qs.length) {
-        persist();
+        addXp(ok * 10);
         return onDone(ok, qs.length);
       }
       const it = qs[i];
@@ -745,7 +774,7 @@
     let ok = 0;
     const step = () => {
       if (i >= qs.length) {
-        persist();
+        addXp(ok * 10);
         return onDone(ok, qs.length);
       }
       const c = qs[i];
@@ -850,6 +879,7 @@
     go(state.tab);
   });
   if (Voice.canSpeak) speechSynthesis.getVoices(); // Stimmen früh laden
+  renderStats();
   buildNav();
   go(state.lang === 'ja' ? 'today' : 'lessons');
 })();

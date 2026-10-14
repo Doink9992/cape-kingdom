@@ -4,12 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sprachtrainer</title>
-    <link rel="icon" href="data:," />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <meta name="theme-color" content="#3b5bdb" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header>
       <h1>Sprachtrainer</h1>
+      <div id="stats" class="stats" aria-live="polite"></div>
       <select id="lang" aria-label="Sprache"></select>
     </header>
     <nav id="nav"></nav>
@@ -20,5 +24,8 @@
     <script src="js/speech.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+    </script>
   </body>
 </html>

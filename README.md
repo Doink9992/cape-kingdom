@@ -5,6 +5,7 @@ Reines HTML/CSS/JS, kein Build, kein Server-Backend. Japanisch ist der Schwerpun
 
 ## Funktionen
 
+- **Serie und Punkte**: Tage in Folge (🔥) und Punkte (⭐) für Quiz, Hören, Kana, Vokabeln und Sprechen, angezeigt oben.
 - **Heute** (nur Japanisch): Tagesplan für ca. 20–25 Minuten: Kana, Grammatik (solange neue Lektionen anstehen), Vokabeln wiederholen, Hörtraining.
 - **Kana-Trainer** (nur Japanisch): Hiragana und Katakana in 15 Gruppen je Schrift (inkl. ゛/゜ und Kombinationen wie きゃ). Zeichen ansehen und anhören, Quiz in zwei Richtungen (Zeichen → Umschrift, Hören → Zeichen). Gruppe gilt ab 80 % als gelernt. Falsche Zeichen kommen früher zur Wiederholung.
 - **Hörtraining**: Wort/Satz nur anhören (auch langsam), Bedeutung wählen, Text erst danach sichtbar. Braucht keine Kana-Kenntnisse.
@@ -15,7 +16,18 @@ Reines HTML/CSS/JS, kein Build, kein Server-Backend. Japanisch ist der Schwerpun
 - **Sprechen üben**: Satz anhören, nachsprechen, die Spracherkennung des Browsers vergleicht (Treffer ab 75 %).
 - **KI-Gespräch**: Konversation mit Claude auf Anfängerniveau, mit Korrekturen auf Deutsch. Braucht einen eigenen Anthropic-API-Key (Nutzung kostet nach Verbrauch).
 
-## Starten
+## Von überall starten (Hosting + App installieren)
+
+Die App ist eine installierbare Web-App (PWA) mit Offline-Modus. Sie läuft auf GitHub Pages, sobald das einmal aktiviert ist:
+
+1. Pull Request nach `main` mergen (der Workflow `.github/workflows/pages.yml` startet bei jedem Push auf `main`).
+2. Im GitHub-Repo: **Settings → Pages → Build and deployment → Source: „GitHub Actions“** einstellen. Das geht nicht automatisch, weil dafür Admin-Rechte nötig sind. Danach den Workflow „Pages“ unter **Actions** erneut starten.
+3. Die Adresse steht danach unter Settings → Pages, normalerweise `https://<benutzer>.github.io/cape-kingdom/`.
+4. Am Handy im Browser öffnen und „Zum Startbildschirm hinzufügen“ (Chrome: Menü → „App installieren“, Safari: Teilen → „Zum Home-Bildschirm“). Nach dem ersten Laden funktioniert sie auch ohne Internet (nur Spracherkennung und KI-Gespräch brauchen Netz).
+
+Hinweise: Bei privaten Repos braucht GitHub Pages je nach Tarif ein bezahltes Konto. Updates erscheinen nach dem nächsten Öffnen (Cache wird im Hintergrund erneuert). Dein Fortschritt liegt pro Gerät im Browser und wird nicht zwischen Geräten synchronisiert.
+
+## Starten (lokal)
 
 ```sh
 python3 -m http.server 8000
