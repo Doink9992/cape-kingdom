@@ -134,23 +134,39 @@
   }
 
   // ---------- Lektionen ----------
+  // Lektionskarten, bei Japanisch nach Gruppen (Grundlagen, Anime, Häufige Wörter …) einklappbar
+  function lessonGrid(render) {
+    const groups = [];
+    for (const l of lessons()) {
+      const name = l.group || '';
+      let g = groups.find((x) => x.name === name);
+      if (!g) groups.push((g = { name, items: [] }));
+      g.items.push(l);
+    }
+    if (groups.length === 1) return h('div', { class: 'grid' }, groups[0].items.map(render));
+    return groups.map((g) =>
+      h(
+        'details',
+        { class: 'group', open: !g.name.startsWith('Häufige') || g.items.some((l) => prog(l.id).started) },
+        h('summary', {}, `${g.name} (${g.items.length})`),
+        h('div', { class: 'grid' }, g.items.map(render)),
+      ),
+    );
+  }
+
   function viewLessons() {
     show(
       h('h2', {}, `${info().flag} ${info().name}`),
-      h(
-        'div',
-        { class: 'grid' },
-        lessons().map((l) => {
-          const p = prog(l.id);
-          return h(
-            'button',
-            { class: 'card', onclick: () => openLesson(l) },
-            h('strong', {}, l.title),
-            h('span', { class: 'muted' }, `${l.items.length} Einträge`),
-            h('span', { class: 'muted' }, p.started ? `Quiz ${pct(p.quiz)} · Hören ${pct(p.listen || 0)} · Sprechen ${pct(p.speak)}` : 'Noch nicht begonnen'),
-          );
-        }),
-      ),
+      lessonGrid((l) => {
+        const p = prog(l.id);
+        return h(
+          'button',
+          { class: 'card', onclick: () => openLesson(l) },
+          h('strong', {}, l.title),
+          h('span', { class: 'muted' }, `${l.items.length} Einträge`),
+          h('span', { class: 'muted' }, p.started ? `Quiz ${pct(p.quiz)} · Hören ${pct(p.listen || 0)} · Sprechen ${pct(p.speak)}` : 'Noch nicht begonnen'),
+        );
+      }),
     );
   }
 
@@ -164,10 +180,29 @@
         'ul',
         { class: 'items' },
         l.items.map((it) =>
-          h('li', {}, audioBtn(it), h('div', {}, h('div', { class: 'target' }, it.t), it.r && h('div', { class: 'muted' }, it.r), h('div', {}, it.de))),
+          h(
+            'li',
+            {},
+            audioBtn(it),
+            h(
+              'div',
+              {},
+              h('div', { class: 'target' }, it.t),
+              it.r && h('div', { class: 'muted' }, it.r),
+              h('div', {}, it.de),
+              it.ex && h('div', { class: 'example' }, audioBtn(it.ex[0]), h('div', {}, it.ex[0], h('div', { class: 'muted' }, it.ex[1]), h('div', { class: 'muted' }, it.ex[2]))),
+            ),
+          ),
         ),
       ),
-      h('div', { class: 'row' }, h('button', { class: 'primary', onclick: () => runQuiz(l) }, '📝 Quiz'), h('button', { class: 'primary', onclick: () => speakLesson(l) }, '🎤 Sprechen üben')),
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'primary', onclick: () => runQuiz(l) }, '📝 Quiz'),
+        h('button', { class: 'primary', onclick: () => listenLesson(l) }, '👂 Wörter hören'),
+        l.items.some((it) => it.ex) && h('button', { class: 'primary', onclick: () => listenSentences(l) }, '👂 Sätze hören'),
+        h('button', { class: 'primary', onclick: () => speakLesson(l) }, '🎤 Sprechen üben'),
+      ),
     );
   }
 
@@ -285,7 +320,7 @@
       h('h2', {}, `Sprechen üben – ${info().name}`),
       !Voice.canListen && h('p', { class: 'feedback wrong' }, errMsg(new Error('nosupport'))),
       h('p', { class: 'muted' }, 'Wähle eine Lektion. Du hörst den Satz, sprichst ihn nach, und die App vergleicht, was sie verstanden hat.'),
-      h('div', { class: 'grid' }, lessons().map((l) => h('button', { class: 'card', onclick: () => (prog(l.id), speakLesson(l)) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).speak)}`)))),
+      lessonGrid((l) => h('button', { class: 'card', onclick: () => speakLesson(l) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).speak)}`))),
     );
   }
 
@@ -517,9 +552,21 @@
         'div',
         { class: 'grid' },
         h('button', { class: 'card', disabled: !started.length, onclick: () => listenMixed() }, h('strong', {}, 'Gemischt'), h('span', { class: 'muted' }, started.length ? `aus ${started.length} Einträgen deiner begonnenen Lektionen` : 'Starte zuerst eine Lektion')),
-        lessons().map((l) => h('button', { class: 'card', onclick: () => listenLesson(l) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).listen || 0)}`))),
       ),
+      lessonGrid((l) => h('button', { class: 'card', onclick: () => listenLesson(l) }, h('strong', {}, l.title), h('span', { class: 'muted' }, `Bestwert ${pct(prog(l.id).listen || 0)}`))),
     );
+  }
+
+  // Beispielsätze einer Lektion als Hör-Items (Satz, Umschrift, Übersetzung)
+  const sentenceItems = (l) => l.items.filter((it) => it.ex).map((it) => ({ t: it.ex[0], r: it.ex[1], de: it.ex[2] }));
+
+  function listenSentences(l) {
+    const items = sentenceItems(l);
+    const pool = lessons().flatMap(sentenceItems);
+    runListening(items, (ok, n) => {
+      markDaily('listen');
+      listenResult(ok, n, () => listenSentences(l));
+    }, () => openLesson(l), pool);
   }
 
   function listenMixed() {
@@ -547,8 +594,7 @@
     );
   }
 
-  function runListening(items, onDone, back) {
-    const pool = lessons().flatMap((l) => l.items);
+  function runListening(items, onDone, back, pool = lessons().flatMap((l) => l.items)) {
     const qs = shuffle(items).slice(0, 10);
     let i = 0;
     let ok = 0;

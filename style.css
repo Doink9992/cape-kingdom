@@ -71,3 +71,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 .kana-options .option { font-size: 1.8rem; text-align: center; }
 h3 { margin: 1.5rem 0 0.5rem; }
 .prompt:has(.big-kana) { justify-content: center; }
+details.group { margin: 12px 0; }
+details.group > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+details.group > .grid { margin-top: 8px; }
+.example { display: flex; gap: 6px; align-items: flex-start; margin-top: 6px; padding-left: 8px; border-left: 3px solid var(--line); }

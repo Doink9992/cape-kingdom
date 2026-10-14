@@ -6,10 +6,12 @@ const LANGS = {
   it: { name: 'Italienisch', code: 'it-IT', flag: '🇮🇹' },
 };
 
-const L = (id, title, rows) => ({
+// Optionales 5. Feld: Beispielsatz [Satz, Umschrift, Deutsch]
+const L = (id, title, rows, group) => ({
   id,
   title,
-  items: rows.map(([t, de, r, alt]) => ({ t, de, r, alt })),
+  group,
+  items: rows.map(([t, de, r, alt, ex]) => ({ t, de, r, alt, ex })),
 });
 
 const LESSONS = {
@@ -254,5 +256,8 @@ const LESSONS = {
     ]),
   ],
 };
+
+// Gruppen für die Japanisch-Lektionen (weitere kommen aus data.freq.js)
+for (const l of LESSONS.ja) l.group = ['anime1', 'anime2'].includes(l.id) ? 'Anime' : 'Grundlagen';
 
 if (typeof module !== 'undefined') module.exports = { LANGS, LESSONS };
