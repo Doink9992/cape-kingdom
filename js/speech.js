@@ -55,12 +55,12 @@ const Voice = (() => {
     );
   }
 
-  function speak(text, code) {
+  function speak(text, code, rate = 0.85) {
     if (!canSpeak) return false;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = code;
-    u.rate = 0.85; // etwas langsamer für Lernende
+    u.rate = rate; // Standard etwas langsamer für Lernende
     const v = pickVoice(code);
     if (v) u.voice = v;
     speechSynthesis.speak(u);

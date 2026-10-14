@@ -38,3 +38,25 @@ test('parseReply trennt Korrektur und Umschrift', () => {
   assert.strictEqual(r.fix, 'Besser: ...');
   assert.strictEqual(r.speakable, 'こんにちは！げんきですか？');
 });
+
+const KANA = require('../js/kana.js');
+
+test('Kana: Tabellen vollständig, Umschrift eindeutig, Katakana korrekt abgeleitet', () => {
+  for (const script of ['hira', 'kata']) {
+    const chars = KANA[script].flatMap((g) => g.chars);
+    assert.strictEqual(chars.length, 46 + 10 + 13 + 33, `${script}: Anzahl`); // Grund + g/z + d/b/p (ohne ぢ/づ) + Kombinationen
+    assert.strictEqual(new Set(chars.map((c) => c.r)).size, chars.length, `${script}: doppelte Umschrift`);
+    assert.strictEqual(new Set(chars.map((c) => c.k)).size, chars.length, `${script}: doppelte Zeichen`);
+  }
+  const first = (s) => KANA[s][0].chars.map((c) => c.k).join('');
+  assert.strictEqual(first('hira'), 'あいうえお');
+  assert.strictEqual(first('kata'), 'アイウエオ');
+  const kyo = KANA.kata.flatMap((g) => g.chars).find((c) => c.r === 'kyo');
+  assert.strictEqual(kyo.k, 'キョ');
+});
+
+test('Japanisch: Lesungen zum Vorlesen sind echte Kana-Alternativen', () => {
+  const kanaOnly = /^[぀-ヿ]+$/;
+  const sevens = LESSONS.ja.flatMap((l) => l.items).find((i) => i.t === '七');
+  assert.strictEqual(sevens.alt.find((a) => kanaOnly.test(a)), 'なな');
+});

@@ -63,3 +63,11 @@ label input[type='text'], label input[type='password'] { display: block; width: 
 .fix { margin-top: 6px; font-size: 0.9rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
 .hidden { display: none !important; }
+.kana-preview { font-size: 1.3rem; letter-spacing: 0.1em; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin: 12px 0; }
+.tile { display: flex; flex-direction: column; align-items: center; padding: 12px 4px; }
+.tile .kana { font-size: 2.2rem; line-height: 1.2; }
+.big-kana { font-size: 4rem; line-height: 1.2; }
+.kana-options .option { font-size: 1.8rem; text-align: center; }
+h3 { margin: 1.5rem 0 0.5rem; }
+.prompt:has(.big-kana) { justify-content: center; }
